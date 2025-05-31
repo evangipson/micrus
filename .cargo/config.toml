@@ -1,0 +1,14 @@
+[build]
+target = "x86_64-micrus.json"
+
+[unstable]
+build-std = ["core", "compiler_builtins"]
+build-std-features = ["compiler-builtins-mem"]
+
+[target.x86_64-micrus]
+runner = "bootimage runner"
+linker = "C:\\Users\\evang\\.rustup\\toolchains\\nightly-x86_64-pc-windows-msvc\\lib\\rustlib\\x86_64-pc-windows-msvc\\bin\\rust-lld.exe"
+
+[bootimage]
+disk-image = true
+output = "x86_64-micrus.img"

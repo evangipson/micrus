@@ -1,0 +1,28 @@
+[package]
+name = "micrus"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# writing to hardware registers
+volatile = "0.6.1"
+# basic mutex
+spin = "0.10.0"
+# static global variables
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
+# useful x86_64 utilities
+x86_64 = "0.15.2"
+
+[dev-dependencies]
+# 0.11.0 is the most stable version, but isn't working
+bootloader = "0.9.23"
+
+[profile.dev]
+# needed for bare-metal
+panic = "abort"
+opt-level = 0
+
+[profile.release]
+# needed for bare-metal
+panic = "abort"
+opt-level = 3

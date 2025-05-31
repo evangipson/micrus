@@ -1,0 +1,5 @@
+{
+	"kernel_path": "target/x86_64-micrus/debug/micrus",
+	"output_bin_path": "target/bootimage.bin",
+	"default_target": "x86_64-micrus"
+}
