@@ -63,6 +63,8 @@ function Unpublish-PreviousBuilds {
     & cargo clean 2>&1 | Out-Null
     # remove any leftover virtualbox xml information for the old builds
     Remove-Item -ErrorAction SilentlyContinue -Path "C:\Users\evang\.VirtualBox\VirtualBox.xml"
+    # remove the old mounted .vdi as well
+    Remove-Item -ErrorAction SilentlyContinue -Path "C:\projects\micrus\target\x86_64-micrus\debug\bootimage-micrus.vdi"
 }
 
 # builds the micrus microkernel boot image, and exits the script on failure.

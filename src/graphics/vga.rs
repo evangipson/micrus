@@ -73,8 +73,8 @@ impl VgaBuffer {
                 let offset = self.row * VGA_WIDTH + self.column;
                 unsafe {
                     let char_ptr = self.buffer.add(offset);
-                    // Convert raw pointer to NonNull, then create VolatilePtr, then write
-                    VolatilePtr::new(NonNull::new(char_ptr).unwrap()).write(char_to_write); // <-- KEY CHANGE
+                    // convert raw pointer to NonNull, then create VolatilePtr, then write
+                    VolatilePtr::new(NonNull::new(char_ptr).unwrap()).write(char_to_write);
                 }
                 self.column += 1;
             }
@@ -96,12 +96,12 @@ impl VgaBuffer {
                 let offset = row * VGA_WIDTH + col;
                 unsafe {
                     let char_ptr = self.buffer.add(offset);
-                    // Convert raw pointer to NonNull, then create VolatilePtr, then write
+                    // convert raw pointer to NonNull, then create VolatilePtr, then write
                     VolatilePtr::new(NonNull::new(char_ptr).unwrap()).write(ScreenChar::new(
                         b' ',
                         Color::Black,
                         Color::Black,
-                    )); // <-- KEY CHANGE
+                    ));
                 }
             }
         }
@@ -121,6 +121,7 @@ impl VgaBuffer {
     }
 }
 
+// must implement unsafe Send and Sync for VgaBuffer to work bare-metal
 unsafe impl Send for VgaBuffer {}
 unsafe impl Sync for VgaBuffer {}
 

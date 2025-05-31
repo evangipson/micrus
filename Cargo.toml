@@ -11,7 +11,7 @@ spin = "0.10.0"
 # static global variables
 lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 # useful x86_64 utilities
-x86_64 = "0.15.2"
+x86_64 = { version = "0.15.2", features = ["instructions"] }
 
 [dev-dependencies]
 # 0.11.0 is the most stable version, but isn't working

@@ -8,9 +8,7 @@ const STATUS_PORT: u16 = 0x64;
 // bit 0: output buffer full (data is available)
 const STATUS_OUTPUT_BUFFER_FULL: u8 = 0x01;
 
-// Scan Code Set 1 (Simplified for common keys)
-// This is a very incomplete mapping. You'd need a much larger one for a full keyboard.
-// It maps basic scan codes to their ASCII representation for typical QWERTY layout.
+// very incomplete scan code mapping.
 fn scancode_to_ascii(scancode: u8) -> Option<char> {
     match scancode {
         0x02 => Some('1'),
@@ -49,11 +47,11 @@ fn scancode_to_ascii(scancode: u8) -> Option<char> {
         0x30 => Some('b'),
         0x31 => Some('n'),
         0x32 => Some('m'),
-        0x39 => Some(' '),  // Spacebar
-        0x1C => Some('\n'), // Enter key
-        // Add more common keys as needed (e.g., Shift, Caps Lock, special characters)
-        // For shift, you'd need to track the shift key state.
-        _ => None, // Unknown or non-printable scancode
+        0x39 => Some(' '),
+        0x1C => Some('\n'),
+        // TODO: add more common keys as needed (e.g., shift, caps lock, special characters)
+        // NOTE: for shift, you'd need to track the shift key state.
+        _ => None, // unknown scan codes
     }
 }
 
