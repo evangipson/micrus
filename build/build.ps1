@@ -43,7 +43,7 @@ function Write-CommandProgress([string] $command, [string] $message) {
 # exits the script if one of them does not exist.
 function Test-AllBuildFilePaths([string] $virtualBoxPath) {
     Write-Host ""
-    Write-Status "confirming all necessary build paths exist"
+    Write-Status "ensuring all build paths exist"
     $buildPaths = @($virtualBoxPath)
     foreach($buildPath in $buildPaths) {
         if (-not (Test-Path -Path $buildPath)) {
@@ -55,22 +55,29 @@ function Test-AllBuildFilePaths([string] $virtualBoxPath) {
 
 # cleans up any left over files from previous builds, and removes
 # any cached virtual box configurations from previous boots.
-function Unpublish-PreviousBuilds {
+function Unpublish-PreviousBuilds([string] $micrusRootPath, [string] $virtualBoxPath) {
     Write-Status "cleaning up any previous builds"
+    $vdiFile = Join-Path -Path $micrusRootPath -ChildPath "target/x86_64-micrus/debug/bootimage-micrus.vdi"
+    $virtualBoxManageFile = Join-Path -Path $virtualBoxPath -ChildPath "VBoxManage.exe"
+    # ensure virtual box instance is powered off
+    & $virtualBoxManageFile controlvm "micrus" poweroff 2>&1 | Out-Null
+    Start-Sleep -Milliseconds 10
+    # detach the hard disk medium from the vm
+    & $virtualBoxManageFile storageattach "micrus" --storagectl "PIIX4" --port 0 --device 0 --type hdd --medium none 2>&1 | Out-Null
+    # unmount old hard disk
+    & $virtualBoxManageFile closemedium disk $vdiFile --delete 2>&1 | Out-Null
     # change directory to be able to run 'cargo' commands
     Push-Location $micrusRootPath
     # run 'cargo clean' to remove any leftover files from previous builds
     & cargo clean 2>&1 | Out-Null
     # remove any leftover virtualbox xml information for the old builds
-    Remove-Item -ErrorAction SilentlyContinue -Path "C:\Users\evang\.VirtualBox\VirtualBox.xml"
-    # remove the old mounted .vdi as well
-    Remove-Item -ErrorAction SilentlyContinue -Path "C:\projects\micrus\target\x86_64-micrus\debug\bootimage-micrus.vdi"
+    # Remove-Item -ErrorAction SilentlyContinue -Path "C:\Users\evang\.VirtualBox\VirtualBox.xml"
 }
 
 # builds the micrus microkernel boot image, and exits the script on failure.
 function Build-BootImage {
     # run 'cargo bootimage' to create a new microkernel .bin file
-    Write-CommandProgress "cargo bootimage" "starting micrus microkernel build"
+    Write-CommandProgress "cargo bootimage" "building micrus microkernel"
     if ($LASTEXITCODE -ne 0) {
         Write-Status -ForError "micrus microkernel build failed"
         exit $LASTEXITCODE
@@ -92,7 +99,15 @@ function Convert-MicroKernelImage([string] $micrusRootPath, [string] $virtualBox
     & $ddPath if=$binFile of=$imgFile bs=512 conv=notrunc seek=0 2>&1 | Out-Null
     # use VBoxManage.exe to convert from .img to .vdi
     & $virtualBoxManageFile convertfromraw --format VDI $imgFile $vdiFile 2>&1 | Out-Null
-    Write-Status "micrus microkernel image ready: $vdiFile`n"
+    Write-Status "micrus microkernel image ready"
+}
+
+# attaches the newly converted microkernel image to the micrus virtual machine
+function Deploy-MicroKernelToVirtualBox([string] $micrusRootPath, [string] $virtualBoxPath) {
+    $vdiFile = Join-Path -Path $micrusRootPath -ChildPath "target/x86_64-micrus/debug/bootimage-micrus.vdi"
+    $virtualBoxManageFile = Join-Path -Path $virtualBoxPath -ChildPath "VBoxManage.exe"
+    & $virtualBoxManageFile storageattach "micrus" --storagectl "PIIX4" --port 0 --device 0 --type hdd --medium $vdiFile 2>&1 | Out-Null
+    Write-Status "micrus microkernal image deployed to vm`n"
 }
 
 # builds the micrus microkernel from start to finish.
@@ -100,9 +115,10 @@ function Build-MicroKernel([string] $micrusRootPath, [string] $virtualBoxPath) {
     # try to run the build sequence
     try {
         Test-AllBuildFilePaths $virtualBoxPath
-        Unpublish-PreviousBuilds
+        Unpublish-PreviousBuilds $micrusRootPath $virtualBoxPath
         Build-BootImage
         Convert-MicroKernelImage $micrusRootPath $virtualBoxPath
+        Deploy-MicroKernelToVirtualBox $micrusRootPath $virtualBoxPath
     }
     # report any unexpected errors
     catch {
