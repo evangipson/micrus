@@ -1,43 +1,75 @@
-use crate::{input::keyboard, print, println};
+use crate::{
+    clear,
+    input::keyboard,
+    interrupts::shutdown,
+    print, println,
+    system::{self, modules},
+};
 
 pub fn display_welcome_message() {
-    println!("            _                     ");
-    println!("  _ __ ___ (_) ___ _ __ _   _ ___ ");
+    println!("");
+    println!(r"            _                     ");
+    println!(r"  _ __ ___ (_) ___ _ __ _   _ ___ ");
     println!(r" | '_ ` _ \| |/ __| '__| | | / __|");
     println!(r" | | | | | | | (__| |  | |_| \__ \");
     println!(r" |_| |_| |_|_|\___|_|   \__,_|___/");
     println!("");
     println!("micrus microkernel loader version 0.0.1");
     println!("");
+    println!("select module(s) to install:");
+    println!("[1]: filesystem");
+    println!("[2]: network");
+    println!("[3]: fire interrupt");
+    println!("[4]: boot kernel");
+    println!("[Q]: quit");
+    println!("");
+    print!("> ");
 }
 
 pub fn display_module_selection() {
-    println!("Select a module to load:");
-    println!("");
-    println!("  1: Filesystem");
-    println!("  2: Network Stack");
-    println!("  3: Shell");
-    println!("  4: Cause Breakpoint Interrupt");
-    println!("  q: Quit");
-    print!("> ");
-
-    // TODO: implement read_char_from_keyboard
-    let choice = keyboard::read_char();
-    match choice {
+    let char = keyboard::read_char();
+    match char {
         '1' => {
-            println!("Loading Basic Filesystem...");
-            // load and initialize the filesystem module
-            // e.g.: `load_module("filesystem");`
+            println!("1");
+            if modules::FILE_SYSTEM_ADDED.lock().eq(&true) {
+                println!("already added file system.");
+            } else {
+                println!("adding file system...");
+                *modules::FILE_SYSTEM_ADDED.lock() = true;
+                modules::FILE_SYSTEM.lock().new();
+                println!("file system added.");
+            }
         }
-        '2' => println!("Network Stack not yet implemented!"),
-        '3' => println!("Shell not yet implemented!"),
-        '4' => x86_64::instructions::interrupts::int3(),
+        '2' => {
+            println!("2");
+            println!("network stack not yet implemented.")
+        }
+        '3' => {
+            x86_64::instructions::interrupts::int3();
+        }
+        '4' => {
+            println!("4");
+            println!("booting micrus...");
+            clear!();
+            modules::FILE_SYSTEM.lock().go_to_root();
+            system::shell::start_shell();
+        }
         'Q' | 'q' => {
-            println!("Shutting down...");
-            // TODO: implement safe shutdown, as this will just halt the
-            // CPU until the next interrupt
-            x86_64::instructions::hlt();
+            if char == 'Q' {
+                println!("Q");
+            } else {
+                println!("q");
+            }
+            println!("shutting down...");
+            println!("");
+            shutdown::shutdown();
         }
-        _ => println!("Invalid choice."),
+        _ => {
+            println!("{char}");
+            println!("invalid option.");
+        }
     }
+
+    println!("");
+    print!("> ");
 }

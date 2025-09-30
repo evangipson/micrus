@@ -17,22 +17,28 @@ function Write-CommandProgress([string] $command, [string] $message) {
     Write-Host -NoNewLine "⣾ " -ForegroundColor White
     Write-Host -NoNewLine "$message" -ForegroundColor Gray
 
-    # run the command as a separate process without creating a new window
-    $commandProcess = Start-Process powershell.exe -NoNewWindow -ArgumentList $command -PassThru -RedirectStandardOutput "NUL"
-
     # run the loading animation while the command is running
     $loadingDots = @("⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷")
     $initialPosition = $host.UI.RawUI.CursorPosition
     $animationPosition = $initialPosition
     $animationPosition.X -= $message.Length + 2
+
+    # run the command as a separate process without creating a new window
+    $commandProcess = Start-Process powershell.exe -WindowStyle Hidden -ArgumentList $command -PassThru
+
+    # spin the loader while the process is working
     $idx = 0
     while ($commandProcess.HasExited -ne $true) {
         $host.UI.RawUI.CursorPosition = $animationPosition
         Write-Host -NoNewline $loadingDots[$idx] -ForegroundColor White
         $idx++
-        if ($idx -ge $loadingDots.Length) { $idx = 0 }
+        if ($idx -ge $loadingDots.Length) {
+            $idx = 0
+        }
         Start-Sleep -Milliseconds 100
     }
+
+    # write out the success message when finished
     $host.UI.RawUI.CursorPosition = $animationPosition
     Write-Host -NoNewLine '✓ ' -ForegroundColor DarkGreen
     $host.UI.RawUI.CursorPosition = $initialPosition
