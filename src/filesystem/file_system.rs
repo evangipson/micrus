@@ -9,12 +9,12 @@ pub struct FileSystem<'fs> {
 
 impl FileSystem<'_> {
     pub fn go_to_root(&mut self) {
-        self.current_dir = self.root.full_path
+        self.current_dir = self.root.name
     }
 
     pub fn change_dir(&'static mut self, new_dir: &'static str) {
         if let Some(directory) = self.directories.iter().find(|dir| dir.name.eq(new_dir)) {
-            self.current_dir = directory.full_path;
+            self.current_dir = &directory.full_path;
         }
     }
 

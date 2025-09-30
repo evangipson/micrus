@@ -1,9 +1,21 @@
-use crate::{input::keyboard, print, println, system::modules};
+use crate::{
+    input::keyboard,
+    print, println,
+    system::modules::{self, file_system_added},
+};
+
+/// writes the directory for the shell with user prompt.
+fn write_prompt() {
+    if file_system_added() {
+        print!(" ");
+        modules::FILE_SYSTEM.lock().write_current_dir();
+    }
+    print!("> ");
+}
 
 /// starts a shell session.
 pub fn start_shell() {
-    modules::FILE_SYSTEM.lock().write_current_dir();
-    print!(" > ");
+    write_prompt();
     loop {
         let char = keyboard::read_char();
         match char {
@@ -11,8 +23,7 @@ pub fn start_shell() {
                 // TODO: evaluate shell command
                 println!("");
                 println!("unknown command.");
-                modules::FILE_SYSTEM.lock().write_current_dir();
-                print!(" > ");
+                write_prompt();
             }
             _ => {
                 print!("{char}");

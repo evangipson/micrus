@@ -1,10 +1,4 @@
-use crate::{
-    clear,
-    input::keyboard,
-    interrupts::shutdown,
-    print, println,
-    system::{self, modules},
-};
+use crate::{clear, input::keyboard, interrupts::shutdown, print, println, system};
 
 pub fn display_welcome_message() {
     println!("");
@@ -31,12 +25,11 @@ pub fn display_module_selection() {
     match char {
         '1' => {
             println!("1");
-            if modules::FILE_SYSTEM_ADDED.lock().eq(&true) {
+            if system::modules::file_system_added() {
                 println!("already added file system.");
             } else {
                 println!("adding file system...");
-                *modules::FILE_SYSTEM_ADDED.lock() = true;
-                modules::FILE_SYSTEM.lock().new();
+                system::modules::add_file_system();
                 println!("file system added.");
             }
         }
@@ -51,7 +44,6 @@ pub fn display_module_selection() {
             println!("4");
             println!("booting micrus...");
             clear!();
-            modules::FILE_SYSTEM.lock().go_to_root();
             system::shell::start_shell();
         }
         'Q' | 'q' => {
