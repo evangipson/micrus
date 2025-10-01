@@ -48,7 +48,8 @@ fn scancode_to_ascii(scancode: u8) -> Option<char> {
         0x31 => Some('n'),
         0x32 => Some('m'),
         0x39 => Some(' '),
-        0x1C => Some('\n'),
+        0x1C => Some('\n'),   // enter
+        0x0E => Some('\x08'), // backspace
         // TODO: add more common keys as needed (e.g., shift, caps lock, special characters)
         // NOTE: for shift, you'd need to track the shift key state.
         _ => None, // unknown scan codes
