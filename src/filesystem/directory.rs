@@ -1,22 +1,18 @@
-use crate::filesystem::{
-    constants::{MAX_PATH_LENGTH, PATH_SEPARATOR},
-    file::File,
-};
+use crate::filesystem::constants;
 use core::str;
 use heapless::String;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Directory<'dir> {
     pub name: &'dir str,
     pub parent: &'dir str,
-    pub files: &'dir [File],
-    pub full_path: String<MAX_PATH_LENGTH>,
+    pub full_path: String<{ constants::MAX_PATH_LENGTH }>,
 }
 
 impl Directory<'_> {
-    fn build_path(segments: &[&str]) -> String<MAX_PATH_LENGTH> {
+    fn build_path(segments: &[&str]) -> String<{ constants::MAX_PATH_LENGTH }> {
         // create a fixed-capacity string on the stack
-        let mut path: String<MAX_PATH_LENGTH> = String::new();
+        let mut path: String<{ constants::MAX_PATH_LENGTH }> = String::new();
 
         for (i, segment) in segments.iter().enumerate() {
             // append the directory segment
@@ -38,12 +34,13 @@ impl Directory<'_> {
         Self {
             name,
             parent,
-            full_path: if name.eq(PATH_SEPARATOR) {
-                Self::build_path(&[PATH_SEPARATOR])
+            full_path: if name.eq(constants::PATH_SEPARATOR) {
+                Self::build_path(&[constants::PATH_SEPARATOR])
+            } else if parent.eq(constants::PATH_SEPARATOR) {
+                Self::build_path(&[constants::PATH_SEPARATOR, name])
             } else {
-                Self::build_path(&[parent, PATH_SEPARATOR, name])
+                Self::build_path(&[parent, constants::PATH_SEPARATOR, name])
             },
-            files: &[],
         }
     }
 }

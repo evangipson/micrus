@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct File {
     pub name: &'static str,
     pub contents: Option<&'static str>,

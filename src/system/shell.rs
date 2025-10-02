@@ -16,10 +16,10 @@ fn write_prompt() {
 
 fn evaluate_command(command: &str) {
     if command.starts_with("cd") {
-        let new_dir = command
-            .split(" ")
-            .nth(1)
-            .unwrap_or(constants::PATH_SEPARATOR);
+        let mut new_dir_raw = command.split_whitespace();
+        let new_dir = new_dir_raw.nth(1).unwrap_or(constants::PATH_SEPARATOR);
+        println!("");
+        println!("should change directory to {new_dir}");
         modules::FILE_SYSTEM.lock().change_dir(new_dir);
         println!("");
         println!(
@@ -35,24 +35,29 @@ fn evaluate_command(command: &str) {
 /// starts a shell session.
 pub fn start_shell() {
     let mut command: String<256> = String::new();
-    let mut char_count: u32 = 0;
     write_prompt();
     loop {
         let char = keyboard::read_char();
         match char {
+            // handle enter
             '\n' => {
+                // evaluate, then clear, then re-prompt
                 evaluate_command(command.as_str());
+                command.clear();
                 write_prompt();
             }
+            // handle backspace
             '\x08' => {
-                print!("\x08");
-                command.remove(char_count as usize);
-                char_count -= 1;
+                // don't allow removal of the prompt
+                if !command.is_empty() {
+                    print!("\x08 \x08");
+                    command.pop();
+                }
             }
+            // handle all valid characters
             ' '..='~' => {
                 print!("{char}");
                 command.push(char).expect("argument too long for shell.");
-                char_count += 1;
             }
             _ => {}
         }

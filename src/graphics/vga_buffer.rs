@@ -31,6 +31,8 @@ impl VgaBuffer {
 
         match byte {
             b'\n' => self.new_line(),
+            // handle backspace
+            b'\x08' => self.move_cursor_back(),
             _ => {
                 if self.column >= VGA_WIDTH {
                     self.new_line();
@@ -38,8 +40,7 @@ impl VgaBuffer {
                 let offset = self.row * VGA_WIDTH + self.column;
                 unsafe {
                     let char_ptr = self.buffer.add(offset);
-                    // Convert raw pointer to NonNull, then create VolatilePtr, then write
-                    VolatilePtr::new(NonNull::new(char_ptr).unwrap()).write(char_to_write); // <-- KEY CHANGE
+                    VolatilePtr::new(NonNull::new(char_ptr).unwrap()).write(char_to_write);
                 }
                 self.column += 1;
             }
@@ -75,13 +76,21 @@ impl VgaBuffer {
     pub fn write_string(&mut self, s: &str, foreground: Color, background: Color) {
         for byte in s.bytes() {
             match byte {
-                0x20..=0x7e | b'\n' => unsafe {
+                // allow b'\x08' (backspace) to pass through
+                0x20..=0x7e | b'\n' | b'\x08' => unsafe {
                     self.write_byte(byte, foreground, background);
                 },
+                // handle characters like tabs, etc., by printing the square (0xfe)
                 _ => unsafe {
                     self.write_byte(0xfe, foreground, background);
                 },
             }
+        }
+    }
+
+    fn move_cursor_back(&mut self) {
+        if self.column > 0 {
+            self.column -= 1;
         }
     }
 }
